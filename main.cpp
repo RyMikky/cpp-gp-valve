@@ -27,5 +27,5 @@ int main(char argv, char** args) {
 
 	valve.SetValveStance(1.0f);          // полностью открываем клапан
 
-	std::cout << "Gaz consumption is " << valve.GetСonsumption() << " kg/sec" << std::endl;
+	std::cout << "Gaz consumption is " << valve.GetСonsumption() << " m3/sec" << std::endl;
 }
