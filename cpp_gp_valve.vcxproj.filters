@@ -21,6 +21,12 @@
     <ClCompile Include="valve.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="settings.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="console.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="valve.h">
@@ -32,7 +38,13 @@
     <ClInclude Include="physics.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="defines.h">
+    <ClInclude Include="settings.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="console.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="matherials.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

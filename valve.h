@@ -1,88 +1,63 @@
 ﻿#pragma once
 
-#include "defines.h"
-#include "stdint.h"
-#include "math.h"
-#include "physics.h"
-
+#include "settings.h"
 
 namespace fittings {
 
-	struct ValveSettings {
-		STREAM_PREASSURE        // давленние потока газа
-		STREAM_MOL_MASS         // молярная масса газа
-		STREAM_С_TEMP           // температура потока в цельсиях
-		VALVE_RADIUS            // радиус клапана
-		PIPE_RADIUS             // радиус труб
-		VALVE_STANCE            // процент открытия клапана
+	/*
+		Клапан представляет собой сужающее устройство (СУ)
+		Выполненное в виде диафрагмы с переменным диаметром
 
-		ValveSettings() = delete;
-		ValveSettings(PRESSURE_PTR, CTEMP_PTR);
-		
-		// Устанавливаает давление газа в системе
-		ValveSettings& SetStreamPressure(PRESSURE_PTR);
-		// Задаёт молярную массу газа, поданного в систему
-		ValveSettings& SetStreamMolarMass(MASS);
-		// Задёт температуру потока в градусах Цельсия
-		ValveSettings& SetStreamTemperature(CTEMP_PTR);
-		// Задает радиус пропускного отверстия клапана
-		ValveSettings& SetValveRadius(RADIUS);
-		// Задаёт радиус сеченния труб
-		ValveSettings& SetPipeRadius(RADIUS);
-		// Задаёт процент открытия клапана
-		ValveSettings& SetValveStance(PRECENT);
-	};
-	
+		A  -------- >> --------- | ---------- >> --------  B 
+		Сток                 Диафрагма                 Исток
+
+		-- >> ------------------ | ------------------- >> --
+		Датчик вх. давления             Датчик вых. давления     
+
+		Отбор давления в измеряемом трубопроводе (ИТ) ведется
+		С помощью фланцевой установки датчиков давления на
+		расстоянии 25,4 мм от торцов диафрагмы до оси фланцев
+	*/
+
+
 	class Valve {
+	private:
+		settings::Settings& _settings;
 	public:
+		explicit Valve(settings::Settings&);
 
-		explicit Valve(const ValveSettings&);
+		// Возвращает массовый расход газа проходящего через клапан, в кг/с
+		double GetMassConsumption();
 
-		// Возвращает расход газа проходящегго через клапан с установленным параментрами в м.куб/с
-		CONSUMPTION GetСonsumption() const;
-
-		FLAG IsClosed() const;
-		FLAG IsOpened() const;
-		
-		// Задаёт радиус сечерения клапана
-		Valve& SetValveRadius(RADIUS);
-		// Задаёт радиус сеченния трубы
-		Valve& SetPipeRadius(RADIUS);
-		// Задаёт давление потока
-		Valve& SetStreamPreassure(PRESSURE_PTR);
-		// Задаёт молярную массу газа в потоке
-		Valve& SetStreamMolarMass(MASS);
-		// Задаёт темературу потока в градусах Цельсия
-		Valve& SetStreamTemperature(CTEMP_PTR);
-		// Задаёт процент открытия клапана
-		Valve& SetValveStance(PRECENT);
+		// Возвращает объемный расход газа проходящего через клапан, в м куб./с
+		double GetVolumeConsumption();
 
 	private:
 
-		STREAM_PREASSURE
-		STREAM_MOL_MASS
-		STREAM_С_TEMP
-		VALVE_RADIUS
-		PIPE_RADIUS
-		VALVE_STATUS
-		VALVE_STANCE
+		// Получаем перепад давления на диафрагме
+		physics::units::pressure::MPa GetPressureDropAtTheAperture();
 
-		// Выставляет флаг открытия клапана
-		VOID CheckValveStatus();
-		// Проверяет что заданные параметры введены корректно
-		VOID CheckParamIsCorrect();
+		// Возвращает диаметер в зависимости от окружающей среды
+		math::units::Diameter GetRealTimeDiameter(math::units::Diameter);
 
-		// Переводит температуру из цельсий в кельвины
-		KTEMP TransmuteCelsuimToKelvin(CTEMP);
+		// Возвращает диаметер трубы в зависимости от окружающей среды
+		math::units::Diameter GetPipeRealInnerDiameter();
 
-		// Переводит температуру из кельвина в цельсий
-		CTEMP TransmuteKelvinToCelsuim(KTEMP);
-		
-		// Возвращает площадь сечения клапана
-		VSQARE GetValveSquare() const;
+		// Возвращает диаметер диафрагмы в зависимости от окружающей среды
+		math::units::Diameter GetApertureRealDiameter();
 
-		// Возвращает эффективность клапана
-		EFFECTIVENESS GetValveEffectiveness() const;
+		// Возвращает отношение диаметра диаафрагмы к диаметру трубы, величина безразмерная
+		double GetDiametersRatio() const;
+
+		// Возвращает коэффициент скорости входа потока E, величина безразмерная
+		double GetEntryCoefficient();
+
+		// Возвращает коэффициент истечения С, величина безразмерная
+		double GetFlowCoefficient();
+
+		// Возвращает коэффициент расширения ε, величина безразмерная
+		double GetExpansionCoefficient();
+
 	};
 
 
