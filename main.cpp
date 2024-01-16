@@ -26,21 +26,6 @@ int main(char args, char** argv) {
 	settings::Settings settings = console::ParseCommandLine(args, argv);
 	fittings::Valve valve(settings);
 
-
-	//// Параметры задаваемые по ссылке, чтобы они менялись автоматом
-	//CTEMP temp = 11;                                     // температура газа в системе в град Цельсия
-	//PRESSURE pres = physics::convert::ConvertMPAtoPA(14);                  // давление в системе в Па
-	//
-	//fittings::Valve valve(
-	//	fittings::ValveSettings(&pres, &temp)
-	//	.SetValveRadius(math::convert::ConvertMillimeterToMeter(300))				       	  // в мм
-	//	.SetPipeRadius(math::convert::ConvertMillimeterToMeter(300))					   	  // в мм
-	//	.SetStreamMolarMass(physics::constants::_METHAN_MOLAR_MASS));
-
-	//assert(valve.IsClosed());
-
-	//valve.SetValveStance(1.0f);          // полностью открываем клапан
-
 	std::cout << "Gaz mass consumption is " << valve.GetMassConsumption() << " kg/sec" << std::endl;
 	std::cout << "Gaz volume consumption is " << valve.GetVolumeConsumption() << " m3/sec" << std::endl;
 }
