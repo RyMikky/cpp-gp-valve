@@ -26,13 +26,25 @@ namespace fittings {
 	public:
 		explicit Valve(settings::Settings&);
 
+		// Устанавливает процент открытия клапана
+		Valve& SetValveScale(double);
+
+		// Возвращает текущий процент открытия клапана
+		double GetValveScale() const;
+
 		// Возвращает массовый расход газа проходящего через клапан, в кг/с
 		double GetMassConsumption();
 
 		// Возвращает объемный расход газа проходящего через клапан, в м куб./с
 		double GetVolumeConsumption();
 
+		// Возрвращает статус открытия клапана
+		bool IsClosed() const;
+
 	private:
+
+		// процент открытия клапана
+		double _scale = 1.0; 
 
 		// Получаем перепад давления на диафрагме
 		physics::units::pressure::MPa GetPressureDropAtTheAperture();

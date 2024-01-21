@@ -129,18 +129,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="settings.cpp" />
-    <ClCompile Include="console.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="valve.cpp" />
+    <ClCompile Include="src/settings.cpp" />
+    <ClCompile Include="src/console.cpp" />
+    <ClCompile Include="src/main.cpp" />
+    <ClCompile Include="src/valve.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="matherials.h" />
-    <ClInclude Include="settings.h" />
-    <ClInclude Include="console.h" />
-    <ClInclude Include="math.h" />
-    <ClInclude Include="physics.h" />
-    <ClInclude Include="valve.h" />
+    <ClInclude Include="src/matherials.h" />
+    <ClInclude Include="src/settings.h" />
+    <ClInclude Include="src/console.h" />
+    <ClInclude Include="src/math.h" />
+    <ClInclude Include="src/physics.h" />
+    <ClInclude Include="src/valve.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

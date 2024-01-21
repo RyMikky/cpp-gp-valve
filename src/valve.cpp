@@ -17,6 +17,22 @@ namespace fittings {
 		: _settings(settings)
 	{}
 
+	Valve& Valve::SetValveScale(double scale) {
+		if (scale < 0.0 && scale > 1.0) 
+			throw std::out_of_range("Value opened procet is incorrect");
+
+		_scale = scale;
+		return *this;
+	}
+
+	double Valve::GetValveScale() const {
+		return _scale;
+	}
+
+	bool Valve::IsClosed() const {
+		return _scale <= 0.0;
+	}
+
 	double Valve::GetMassConsumption() {
 		/*
 			Формула рассчёта массового расхода

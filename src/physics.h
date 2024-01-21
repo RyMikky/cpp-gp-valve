@@ -14,6 +14,8 @@ namespace physics {
 		// универсальная газовая постоянная
 		static const double _R = 8.3145;
 		static const double _K_TEMP_SCALER = 273.15;
+		static const double _ATM_IN_ONE_MPA = 9.8692;
+		static const double _MPA_IN_ONE_ATM = 0.10133;
 
 	} // namespace constants
 
@@ -36,6 +38,10 @@ namespace physics {
 			};
 
 			struct MPa {
+				double _value = 0.0;
+			};
+
+			struct Atm {
 				double _value = 0.0;
 			};
 
@@ -104,6 +110,11 @@ namespace physics {
 		// Возвращает давление в мегапаскалях
 		static pressure::MPa Convert(const pressure::Pa& press) {
 			return { press._value / (double)1e6 };
+		}
+		
+		// Возвращает давление в мегапаскалях
+		static pressure::MPa Convert(const pressure::Atm& press) {
+			return { press._value / constants::_ATM_IN_ONE_MPA };
 		}
 
 		// Возвращает молярную массу в г/моль = кг/кмоль
