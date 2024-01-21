@@ -3,8 +3,8 @@
 #include "matherials.h"
 #include "physics.h"
 #include "math.h"
-//#include "defines.h"
 
+#include <set>
 #include <string>
 #include <utility>
 #include <numeric>
@@ -18,6 +18,10 @@ using namespace std::string_view_literals;
 
 // Сожержит структуру настроек клапана и все необходимые методы для её получения
 namespace settings {
+
+    enum class HANDLER_MODE {
+        SINGLE, PACKAGE
+    };
 
 #define GAS_TYPE_STRING std::string _gas_type_str                                        // Тип газа в системе в виде строки
 #define GAS_CEL_TEMP physics::units::temperature::Cels _gas_celsium_temp                 // Температура газа в системе в град. Цельсия
@@ -35,8 +39,8 @@ namespace settings {
         static const int _MIN_ARGS = 2;
 
         enum class PARAM_TYPE {
-            NOAP, HELP, GAS_TYPE_STR, GAS_CELSIUM_TEMP, GAS_INPUT_PRESSURE, 
-            GAS_OUTPUT_PRESSURE, PIPE_INNER_DIAMETER, PIPE_STEEL_MARK, APERTURE_DIAMETER
+            NOAP, HELP, UNITS, HANDLER_MODE, REPORT_TYPE, REPORT_NAME, GAS_TYPE_STR, GAS_CELSIUM_TEMP, GAS_INPUT_PRESSURE,  
+            GAS_OUTPUT_PRESSURE, GAS_PRESSURE_DROP, GAS_DROP_LIMMIT, GAS_DROP_STEP, PIPE_INNER_DIAMETER, PIPE_STEEL_MARK, APERTURE_DIAMETER
             // NOAP - Not a Parameter
         };
 
@@ -52,12 +56,21 @@ namespace settings {
         static const std::unordered_map<PARAM_TYPE, std::string_view> _PARAM_DESCR = {
 
             { PARAM_TYPE::HELP, "Show console commands descriptions" },
+            { PARAM_TYPE::UNITS, "Set dimension units (possible: atm, mpa, kalv, cels)" },
+
+            { PARAM_TYPE::HANDLER_MODE, "Set programm hadler mode (single_calculation, package_calculation)"},
+            { PARAM_TYPE::REPORT_TYPE, "Set handler report type (may be console output, *.txt or *.png file)"},
+            { PARAM_TYPE::REPORT_NAME, "Set handler report file name (only for txt or png output)"},
 
             { PARAM_TYPE::GAS_TYPE_STR, "Set gas type (print string)" },
             { PARAM_TYPE::GAS_CELSIUM_TEMP, "Set gas temperature, in Celsium" },
 
             { PARAM_TYPE::GAS_INPUT_PRESSURE, "Set gas input to pipe pressure, in MPa" },
-            { PARAM_TYPE::GAS_OUTPUT_PRESSURE, "Set gas output from pipe pressure, in MPa" },
+            { PARAM_TYPE::GAS_OUTPUT_PRESSURE, "Set gas output aperture pipe pressure, in MPa (must be set this, or pressure drop)" },
+
+            { PARAM_TYPE::GAS_PRESSURE_DROP, "Set gas pressure drop on aperture, in MPa (must be set on pakage_calculation as from-value)" },
+            { PARAM_TYPE::GAS_DROP_LIMMIT, "Set gas pressure drop max_value, in MPa (must be set on pakage_calculation as to-value)"},
+            { PARAM_TYPE::GAS_DROP_STEP, "Set gas pressure drop step, in MPa (must be set on pakage_calculation)"},
 
             { PARAM_TYPE::PIPE_INNER_DIAMETER, "Set pipe inner diameter, in mm" },
             { PARAM_TYPE::PIPE_STEEL_MARK, "Set pipe steel mark (print string)" },
@@ -69,12 +82,21 @@ namespace settings {
         static const std::unordered_map<std::string_view, PARAM_TYPE> _COMMAND_VARIANTS = {
 
             { "--help"sv, PARAM_TYPE::HELP }, { "-h"sv, PARAM_TYPE::HELP }, 
+            { "--units"sv, PARAM_TYPE::UNITS }, { "-u"sv, PARAM_TYPE::UNITS },
+
+            { "--mode"sv, PARAM_TYPE::HANDLER_MODE }, { "-m"sv, PARAM_TYPE::HANDLER_MODE },
+            { "--report-type"sv, PARAM_TYPE::REPORT_TYPE }, { "-r"sv, PARAM_TYPE::REPORT_TYPE },
+            { "--report-name"sv, PARAM_TYPE::REPORT_NAME }, { "-n"sv, PARAM_TYPE::REPORT_NAME },
 
             { "--gas-type-str"sv, PARAM_TYPE::GAS_TYPE_STR }, { "-g"sv, PARAM_TYPE::GAS_TYPE_STR },
             { "--gas-cel-temp"sv, PARAM_TYPE::GAS_CELSIUM_TEMP }, { "-t"sv, PARAM_TYPE::GAS_CELSIUM_TEMP },
 
-            { "--gas-in-press"sv, PARAM_TYPE::GAS_INPUT_PRESSURE }, { "-i"sv, PARAM_TYPE::GAS_INPUT_PRESSURE },
+            { "--gas-in-press"sv, PARAM_TYPE::GAS_INPUT_PRESSURE }, { "-i"sv, PARAM_TYPE::GAS_INPUT_PRESSURE }, 
             { "--gas-out-press"sv, PARAM_TYPE::GAS_OUTPUT_PRESSURE }, { "-o"sv, PARAM_TYPE::GAS_OUTPUT_PRESSURE },
+
+            { "--gas-press-drop"sv, PARAM_TYPE::GAS_PRESSURE_DROP }, { "-d"sv, PARAM_TYPE::GAS_PRESSURE_DROP },
+            { "--gas-drop-limmit"sv, PARAM_TYPE::GAS_DROP_LIMMIT }, { "-l"sv, PARAM_TYPE::GAS_DROP_LIMMIT },
+            { "--gas-drop-step"sv, PARAM_TYPE::GAS_DROP_STEP }, { "-e"sv, PARAM_TYPE::GAS_DROP_STEP },
 
             { "--pipe-in-diam"sv, PARAM_TYPE::PIPE_INNER_DIAMETER }, { "-p"sv, PARAM_TYPE::PIPE_INNER_DIAMETER },
             { "--pipe-stl-mark"sv, PARAM_TYPE::PIPE_STEEL_MARK }, { "-s"sv, PARAM_TYPE::PIPE_STEEL_MARK },
@@ -87,6 +109,15 @@ namespace settings {
             ParamType() = default;
             constexpr static std::string_view HELP_SHORT = "-h";
             constexpr static std::string_view HELP_LARGE = "--help";
+            constexpr static std::string_view UNITS_SHORT = "-u";
+            constexpr static std::string_view UNITS_LARGE = "--units";
+
+            constexpr static std::string_view HANDLER_MODE_SHORT = "-m";
+            constexpr static std::string_view HANDLER_MODE_LARGE = "--mode";
+            constexpr static std::string_view REPORT_TYPE_SHORT = "-r";
+            constexpr static std::string_view REPORT_TYPE_LARGE = "--report-type";
+            constexpr static std::string_view REPORT_NAME_SHORT = "-n";
+            constexpr static std::string_view REPORT_NAME_LARGE = "--report-name";
 
             constexpr static std::string_view GAS_TYPE_SHORT = "-g";
             constexpr static std::string_view GAS_TYPE_LARGE = "--gas-type-str";
@@ -98,6 +129,13 @@ namespace settings {
             constexpr static std::string_view GAS_OUTPUT_PRESSURE_SHORT = "-o";
             constexpr static std::string_view GAS_OUTPUT_PRESSURE_LARGE = "--gas-out-press";
 
+            constexpr static std::string_view GAS_PRESSURE_DROP_SHORT = "-d";
+            constexpr static std::string_view GAS_PRESSURE_DROP_LARGE = "--gas-press-drop";
+            constexpr static std::string_view GAS_DROP_LIMMIT_SHORT = "-l";
+            constexpr static std::string_view GAS_DROP_LIMMIT_LARGE = "--gas-drop-limmit";
+            constexpr static std::string_view GAS_DROP_STEP_SHORT = "-e";
+            constexpr static std::string_view GAS_DROP_STEP_LARGE = "--gas-drop-step";
+
             constexpr static std::string_view PIPE_INNER_DIAMETER_SHORT = "-p";
             constexpr static std::string_view PIPE_INNER_DIAMETER_LARGE = "--pipe-in-diam";
             constexpr static std::string_view PIPE_STEEL_MARK_SHORT = "-s";
@@ -106,10 +144,37 @@ namespace settings {
             constexpr static std::string_view APERTURE_DIAMETER_LARGE = "--aper-diam";
         };
 
+        static const std::set<std::string_view> _POSSIBLE_HANDLER_MODE_ARGS = 
+        { 
+            "single"sv, "package"sv, "single_mode"sv, "package_mode"sv, "single_calculation"sv, "package_calculation"sv
+        };
+
+        static const std::set<std::string_view> _POSSIBLE_UNITS_ARGS =
+        {
+            "kalv"sv, "kalv_mpa"sv, "kalv_atm"sv, "cels"sv, "cels_mpa"sv, "cels_atm"sv,
+            "atm"sv, "atm_kalv"sv, "atm_cels"sv, "mpa"sv, "mpa_kalv"sv, "mpa_cels"sv
+        };
+
+        static const std::set<std::string_view> _POSSIBLE_REPORT_TYPE_ARGS =
+        {
+            "image"sv, "text"sv, "console"sv, "console_text"sv, "console_image"sv, "image_text"sv, "image_console"sv, "all"sv
+        };
+
+        // Печатает возможные значения аргументов для параметра
+        template <typename Collection>
+        void PrintParameterPossibleArgs(Collection collection, std::ostream& out) {
+            out << "   possible values: ";
+            for (const auto& item : collection) {
+                out << "\"" << item << "\" ";
+            }
+
+            out << std::endl;
+        }
+
         static const std::string_view _CW_SEPARATOR = " | ";
 
         // Ширина строки для вывода написания индекса | CW - Console Width
-        static const int _CW_NUMBER = 2;
+        static const int _CW_NUMBER = 4;
         // Ширина строки для вывода написания команды | CW - Console Width
         static const int _CW_LARGE_COMMAND = 20;
         // Ширина строки для вывода написания короткой команды | CW - Console Width

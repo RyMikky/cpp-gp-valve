@@ -13,6 +13,22 @@ namespace settings {
                 break;
 
             case PARAM_TYPE::HELP:
+                param = PARAM_TYPE::UNITS;
+                break;
+
+            case PARAM_TYPE::UNITS:
+                param = PARAM_TYPE::HANDLER_MODE;
+                break;
+
+            case PARAM_TYPE::HANDLER_MODE:
+                param = PARAM_TYPE::REPORT_TYPE;
+                break;
+
+            case PARAM_TYPE::REPORT_TYPE:
+                param = PARAM_TYPE::REPORT_NAME;
+                break;
+
+            case PARAM_TYPE::REPORT_NAME:
                 param = PARAM_TYPE::GAS_TYPE_STR;
                 break;
             
@@ -29,6 +45,18 @@ namespace settings {
                 break;
 
             case PARAM_TYPE::GAS_OUTPUT_PRESSURE:
+                param = PARAM_TYPE::GAS_PRESSURE_DROP;
+                break;
+
+            case PARAM_TYPE::GAS_PRESSURE_DROP:
+                param = PARAM_TYPE::GAS_DROP_LIMMIT;
+                break;
+
+            case PARAM_TYPE::GAS_DROP_LIMMIT:
+                param = PARAM_TYPE::GAS_DROP_STEP;
+                break;
+
+            case PARAM_TYPE::GAS_DROP_STEP:
                 param = PARAM_TYPE::PIPE_INNER_DIAMETER;
                 break;
             
@@ -58,6 +86,18 @@ namespace settings {
 
             case PARAM_TYPE::HELP:
                 return std::make_pair(ParamType::HELP_SHORT, ParamType::HELP_LARGE);
+
+            case PARAM_TYPE::UNITS:
+                return std::make_pair(ParamType::UNITS_SHORT, ParamType::UNITS_LARGE);
+
+            case PARAM_TYPE::HANDLER_MODE:
+                return std::make_pair(ParamType::HANDLER_MODE_SHORT, ParamType::HANDLER_MODE_LARGE);
+
+            case PARAM_TYPE::REPORT_TYPE:
+                return std::make_pair(ParamType::REPORT_TYPE_SHORT, ParamType::REPORT_TYPE_LARGE);
+
+            case PARAM_TYPE::REPORT_NAME:
+                return std::make_pair(ParamType::REPORT_NAME_SHORT, ParamType::REPORT_NAME_LARGE);
             
             case PARAM_TYPE::GAS_TYPE_STR:
                 return std::make_pair(ParamType::GAS_TYPE_SHORT, ParamType::GAS_TYPE_LARGE);
@@ -70,6 +110,15 @@ namespace settings {
 
             case PARAM_TYPE::GAS_OUTPUT_PRESSURE:
                 return std::make_pair(ParamType::GAS_OUTPUT_PRESSURE_SHORT, ParamType::GAS_OUTPUT_PRESSURE_LARGE);
+
+            case PARAM_TYPE::GAS_PRESSURE_DROP:
+                return std::make_pair(ParamType::GAS_PRESSURE_DROP_SHORT, ParamType::GAS_PRESSURE_DROP_LARGE);
+
+            case PARAM_TYPE::GAS_DROP_LIMMIT:
+                return std::make_pair(ParamType::GAS_DROP_LIMMIT_SHORT, ParamType::GAS_DROP_LIMMIT_LARGE);
+
+            case PARAM_TYPE::GAS_DROP_STEP:
+                return std::make_pair(ParamType::GAS_DROP_STEP_SHORT, ParamType::GAS_DROP_STEP_LARGE);
             
             case PARAM_TYPE::PIPE_INNER_DIAMETER:
                 return std::make_pair(ParamType::PIPE_INNER_DIAMETER_SHORT, ParamType::PIPE_INNER_DIAMETER_LARGE);
@@ -82,6 +131,25 @@ namespace settings {
             
             default:
                 return std::make_pair(_NOAP, _NOAP);
+            }
+        }
+
+        // Печатает возможные значения аргументов для параметра
+        void PrintParameterPossibleArgs(PARAM_TYPE param, std::ostream& out) {
+            switch (param) {
+
+            case PARAM_TYPE::HANDLER_MODE:
+                PrintParameterPossibleArgs(_POSSIBLE_HANDLER_MODE_ARGS, out);
+                break;
+
+            case PARAM_TYPE::UNITS:
+                PrintParameterPossibleArgs(_POSSIBLE_UNITS_ARGS, out);
+                break;
+
+            case PARAM_TYPE::REPORT_TYPE:
+                PrintParameterPossibleArgs(_POSSIBLE_REPORT_TYPE_ARGS, out);
+                break;
+
             }
         }
 
@@ -100,7 +168,9 @@ namespace settings {
         // Выводит в поток лист помощи с описанием всех комманд
         void PrintHelpListAndExit(std::ostream& out) {
             using ParamExpression = std::pair<std::string_view, std::string_view>;
-            out << "Use next console arguments" << std::endl;
+
+            out << "A program for simulating a gas valve and calculating the flow rate of a passing gas stream." 
+                << std::endl << std::endl << "Use next console arguments" << std::endl;
             
             PrintTableHeader(out);
             PARAM_TYPE param = PARAM_TYPE::HELP;
@@ -109,7 +179,13 @@ namespace settings {
                 ParamExpression expression = GetParamExpression(param);
                 if (expression.first != _NOAP && expression.second != _NOAP ) {
 
-                    out << static_cast<int>(param) << std::setw(_CW_NUMBER) << _CW_SEPARATOR;
+                    if (static_cast<int>(param) < 10) {
+                        out << static_cast<int>(param) << std::setw(_CW_NUMBER) << _CW_SEPARATOR;
+                    }
+                    else {
+                        out << static_cast<int>(param) << std::setw(_CW_NUMBER - 2) << _CW_SEPARATOR;
+                    }
+                    
                     out << expression.first << std::setw(_CW_SHORT_COMMAND) << _CW_SEPARATOR;
                     out << expression.second << std::setw(
                         _CW_LARGE_COMMAND - static_cast<int>(expression.second.size())) << _CW_SEPARATOR;
@@ -117,8 +193,17 @@ namespace settings {
                     out << std::endl;
                 }
 
+                PrintParameterPossibleArgs(param, out);
                 ++param;
             }
+
+            out << std::endl;
+
+            out << "The program can be used in two modes: single (used as default) and package calculation\n";
+            out << " - In the single calculation mode, the program outputs the result in only one single state, ";
+            out << "with the valve fully open, according to the set parameters\n";
+            out << " - In the package mode, the program calculates the gas flow rate according to the specified ";
+            out << "pressure drop range by opening the valve from 0 to 100%\n\n";
 
             out << "\nFor example:\n";
             out << "\t" << ParamType::GAS_CELSIUM_TEMP_LARGE << "=15 ";

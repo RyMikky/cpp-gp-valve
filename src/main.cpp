@@ -4,6 +4,8 @@
 #include <cassert>
 #include <iostream>
 
+#include "handler.h"
+
 int main(char args, char** argv) {
 
 	/*
@@ -20,12 +22,16 @@ int main(char args, char** argv) {
 		3) Потерями на трение и сопрротивление кромки диафрагмы пренебрегаем
 	*/
 
+	// -t=15 -g=methane -s=15m -p=100 -a=75 -i=12 -o=11.95
+
 	setlocale(LC_ALL, "Russian");
 	setlocale(LC_NUMERIC, "English");
 
-	settings::Settings settings = console::ParseCommandLine(args, argv);
+	handler::Handler handler(args, argv);
+
+	/*settings::Settings settings = console::ParseCommandLine(args, argv);
 	fittings::Valve valve(settings);
 
 	std::cout << "Gaz mass consumption is " << valve.GetMassConsumption() << " kg/sec" << std::endl;
-	std::cout << "Gaz volume consumption is " << valve.GetVolumeConsumption() << " m3/sec" << std::endl;
+	std::cout << "Gaz volume consumption is " << valve.GetVolumeConsumption() << " m3/sec" << std::endl;*/
 }
