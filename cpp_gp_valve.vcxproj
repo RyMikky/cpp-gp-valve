@@ -222,6 +222,9 @@
     <ClInclude Include="src/valve.h" />
     <ClInclude Include="src\handler.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="readme.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
