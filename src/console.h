@@ -1,10 +1,15 @@
-#pragma once
+п»ї#pragma once
 #include "settings.h"
 
-// Содержит методы для парсинга командной строки
+// РЎРѕРґРµСЂР¶РёС‚ РјРµС‚РѕРґС‹ РґР»СЏ РїР°СЂСЃРёРЅРіР° РєРѕРјР°РЅРґРЅРѕР№ СЃС‚СЂРѕРєРё
 namespace console {
 
-    // Возвращает подготовленную структуру с настройками для клапана
-    settings::Settings ParseCommandLine(int args, char** argv);
+    using SettingsSet = std::pair<settings::HandlerSettings, settings::ValveSettings>;
+
+    // Р’РѕР·РІСЂР°С‰Р°РµС‚ РїРѕРґРіРѕС‚РѕРІР»РµРЅРЅСѓСЋ СЃС‚СЂСѓРєС‚СѓСЂСѓ СЃ РЅР°СЃС‚СЂРѕР№РєР°РјРё РґР»СЏ РєР»Р°РїР°РЅР°
+    settings::ValveSettings ParseCommandLine(int args, char** argv);
+
+    // Р’РѕР·РІСЂР°С‰Р°РµС‚ РїР°СЂСѓ РЅР°СЃС‚СЂРѕРµРє РґР»СЏ РѕР±СЂР°Р±РѕС‚С‡РёРєР° Рё РєР»Р°РїР°РЅР°
+    SettingsSet GetSettingsSet(int args, char** argv);
 
 } // namespace console

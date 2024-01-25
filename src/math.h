@@ -4,51 +4,46 @@ namespace math {
 
 	namespace units {
 
-		namespace scale {
-
-			struct Meter {
-				double _value = 0.0;
-			};
-
-			struct mMeter {
-				double _value = 0.0;
-			};
-
-		} // namespace scale
-
 		struct Radius {
 			Radius() = default;
-			explicit Radius(scale::mMeter value)
+			explicit Radius(double value)
 				: _value{ value } {};
 
-			scale::mMeter _value = {};
+			double _value = NAN;
+
+			inline double operator()() const {
+				return _value;
+			}
+
+			inline bool is_nan() const {
+				return std::isnan(_value);
+			}
 		};
 
 		struct Diameter {
 			Diameter() = default;
-			explicit Diameter(scale::mMeter value)
+			explicit Diameter(double value)
 				: _value{ value } {};
-			scale::mMeter _value = {};
+
+			double _value = NAN;
+
+			inline double operator()() const {
+				return _value;
+			}
+
+			inline bool is_nan() const {
+				return std::isnan(_value);
+			}
 		};
-
-		// Возвращает меру длинны в миллиметрах
-		static scale::mMeter Convert(scale::Meter scale) {
-			return { scale._value * (double)1e6 };
-		}
-
-		// Возвращает меру длинны в метрах
-		static scale::Meter Convert(scale::mMeter scale) {
-			return { scale._value / (double)1e6 };
-		}
 
 		// Возвращает радиус от диаметра
 		static Radius Convert(Diameter diameter) {
-			return Radius({ diameter._value._value / 2 });
+			return !diameter.is_nan() ? Radius(diameter() / 2) : Radius();
 		}
 
 		// Возвращает диаметр от радиуса
 		static Diameter Convert(Radius radius) {
-			return Diameter({ radius._value._value / 2 });
+			return !radius.is_nan() ? Diameter(radius() * 2) : Diameter();
 		}
 
 	} // namespace units

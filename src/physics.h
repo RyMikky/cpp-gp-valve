@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include <cmath>
 #include <typeinfo>
 #include <exception>
 #include <stdexcept>
@@ -34,15 +35,39 @@ namespace physics {
 		namespace pressure {
 
 			struct Pa {
-				double _value = 0.0;
+				double _value = NAN;
+
+				inline double operator()() const {
+					return _value;
+				}
+
+				inline bool is_nan() const {
+					return std::isnan(_value);
+				}
 			};
 
 			struct MPa {
-				double _value = 0.0;
+				double _value = NAN;
+
+				inline double operator()() const {
+					return _value;
+				}
+
+				inline bool is_nan() const {
+					return std::isnan(_value);
+				}
 			};
 
 			struct Atm {
-				double _value = 0.0;
+				double _value = NAN;
+
+				inline double operator()() const {
+					return _value;
+				}
+
+				inline bool is_nan() const {
+					return std::isnan(_value);
+				}
 			};
 
 		} // namespace pressure
@@ -50,15 +75,39 @@ namespace physics {
 		namespace temperature {
 
 			struct Cels {
-				double _value = 0.0;
+				double _value = NAN;
+
+				inline double operator()() const {
+					return _value;
+				}
+
+				inline bool is_nan() const {
+					return std::isnan(_value);
+				}
 			};
 
 			struct Kalv {
-				double _value = 0.0;
+				double _value = NAN;
+
+				inline double operator()() const {
+					return _value;
+				}
+
+				inline bool is_nan() const {
+					return std::isnan(_value);
+				}
 			};
 
 			struct Fahr {
-				double _value = 0.0;
+				double _value = NAN;
+
+				inline double operator()() const {
+					return _value;
+				}
+
+				inline bool is_nan() const {
+					return std::isnan(_value);
+				}
 			};
 
 		} // namespace temperature
@@ -66,11 +115,27 @@ namespace physics {
 		namespace molar_mass {
 
 			struct gMol {
-				double _value = 0.0;
+				double _value = NAN;
+
+				inline double operator()() const {
+					return _value;
+				}
+
+				inline bool is_nan() const {
+					return std::isnan(_value);
+				}
 			};
 
 			struct KgMol {
-				double _value = 0.0;
+				double _value = NAN;
+
+				inline double operator()() const {
+					return _value;
+				}
+
+				inline bool is_nan() const {
+					return std::isnan(_value);
+				}
 			};
 
 		} // namespace molar_mass
@@ -78,7 +143,15 @@ namespace physics {
 		namespace density {
 
 			struct KgM3 {
-				double _value = 0.0;
+				double _value = NAN;
+
+				inline double operator()() const {
+					return _value;
+				}
+
+				inline bool is_nan() const {
+					return std::isnan(_value);
+				}
 			};
 
 		} // namespace density
@@ -86,7 +159,15 @@ namespace physics {
 		namespace speed {
 
 			struct MeterSec {
-				double _value = 0.0;
+				double _value = NAN;
+
+				inline double operator()() const {
+					return _value;
+				}
+
+				inline bool is_nan() const {
+					return std::isnan(_value);
+				}
 			};
 
 		} // namespace speed
@@ -94,37 +175,37 @@ namespace physics {
 
 		// Возвращает температуру в цельсиях
 		static temperature::Cels Convert(const temperature::Kalv& temp) {
-			return { temp._value - constants::_K_TEMP_SCALER };
+			return !temp.is_nan() ? temperature::Cels{ temp() - constants::_K_TEMP_SCALER } : temperature::Cels{};
 		}
 
 		// Возвращает температуру в кельвинах
 		static temperature::Kalv Convert(const temperature::Cels& temp) {
-			return { temp._value + constants::_K_TEMP_SCALER };
+			return !temp.is_nan() ? temperature::Kalv{ temp() + constants::_K_TEMP_SCALER} : temperature::Kalv{};
 		}
 
 		// Возвращает давление в паскалях
 		static pressure::Pa Convert(const pressure::MPa& press) {
-			return { press._value * (double)1e6 };
+			return !press.is_nan() ? pressure::Pa{ press() * (double)1e6 } : pressure::Pa{};
 		}
 
 		// Возвращает давление в мегапаскалях
 		static pressure::MPa Convert(const pressure::Pa& press) {
-			return { press._value / (double)1e6 };
+			return !press.is_nan() ? pressure::MPa{ press() / (double)1e6 } : pressure::MPa{};
 		}
 		
 		// Возвращает давление в мегапаскалях
 		static pressure::MPa Convert(const pressure::Atm& press) {
-			return { press._value / constants::_ATM_IN_ONE_MPA };
+			return !press.is_nan() ? pressure::MPa{ press() / constants::_ATM_IN_ONE_MPA } : pressure::MPa{};
 		}
 
 		// Возвращает молярную массу в г/моль = кг/кмоль
 		static molar_mass::gMol Convert(const molar_mass::KgMol& mass) {
-			return { mass._value * (double)1e3 };
+			return !mass.is_nan() ? molar_mass::gMol{ mass() * (double)1e3 } : molar_mass::gMol{};
 		}
 
 		// Возвращает молярную массу в кг/моль
 		static molar_mass::KgMol Convert(const molar_mass::gMol& mass) {
-			return { mass._value / (double)1e3 };
+			return !mass.is_nan() ? molar_mass::KgMol{ mass() / (double)1e3 } : molar_mass::KgMol{};
 		}
 
 	} // namespace units
@@ -200,25 +281,25 @@ namespace physics {
 				dTemp - разница в тепературах между указанным значением и нижней границей
 			*/
 
-			if (cTemp._value <= 20.0) {
+			if (cTemp() <= 20.0) {
 				return table._t20;
 			}
-			else if (cTemp._value <= 200.0) {
+			else if (cTemp() <= 200.0) {
 				double steps = 200.0 - 20.0;
 				double range = table._t20 - table._t200;
-				double dTemp = cTemp._value - 20.0;
+				double dTemp = cTemp() - 20.0;
 				return table._t20 - ((range / steps) * dTemp);
 			}
-			else if (cTemp._value <= 400.0) {
+			else if (cTemp() <= 400.0) {
 				double steps = 400.0 - 200.0;
 				double range = table._t200 - table._t400;
-				double dTemp = cTemp._value - 200.0;
+				double dTemp = cTemp() - 200.0;
 				return table._t200 - ((range / steps) * dTemp);
 			}
-			else if (cTemp._value <= 600.0) {
+			else if (cTemp() <= 600.0) {
 				double steps = 600.0 - 400.0;
 				double range = table._t400 - table._t600;
-				double dTemp = cTemp._value - 400.0;
+				double dTemp = cTemp() - 400.0;
 				return table._t400 - ((range / steps) * dTemp);
 			}
 			else {
@@ -233,7 +314,7 @@ namespace physics {
 	// Возваращает плотность газа в Килограммах на кубический метр
 	static units::density::KgM3 StreamDensity(units::pressure::Pa press, 
 		units::molar_mass::KgMol mMass, units::temperature::Kalv kTemp) {
-		return { (press._value * mMass._value) / (constants::_R * kTemp._value) };
+		return { (press() * mMass()) / (constants::_R * kTemp()) };
 	}
 
 	// Возваращает плотность газа в Килограммах на кубический метр

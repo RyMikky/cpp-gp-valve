@@ -4,6 +4,11 @@
 
 namespace fittings {
 
+	struct ValveResult {
+		double _mass_consumption = NAN;
+		double _volume_consumption = NAN;
+	};
+
 	/*
 		Клапан представляет собой сужающее устройство (СУ)
 		Выполненное в виде диафрагмы с переменным диаметром
@@ -22,15 +27,9 @@ namespace fittings {
 
 	class Valve {
 	private:
-		settings::Settings& _settings;
+		settings::ValveSettings& _settings;
 	public:
-		explicit Valve(settings::Settings&);
-
-		// Устанавливает процент открытия клапана
-		Valve& SetValveScale(double);
-
-		// Возвращает текущий процент открытия клапана
-		double GetValveScale() const;
+		explicit Valve(settings::ValveSettings&);
 
 		// Возвращает массовый расход газа проходящего через клапан, в кг/с
 		double GetMassConsumption();
@@ -38,15 +37,18 @@ namespace fittings {
 		// Возвращает объемный расход газа проходящего через клапан, в м куб./с
 		double GetVolumeConsumption();
 
+		// Возвращает обобщённую структуру с данными по расходу
+		ValveResult GetCalculationResult();
+
 		// Возрвращает статус открытия клапана
 		bool IsClosed() const;
 
 	private:
 
-		// процент открытия клапана, в базовых условиях считаем, что клапан полностью раскрыт
-		double _scale = 1.0; 
+		// Возвращает объемный расход газа проходящего через клапан, по переданному значению массового расхода в м куб./с
+		double GetVolumeConsumption(double);
 
-		// Получаем перепад давления на диафрагме
+		// Получаем перепад давления на диафрагме. В данной редакции метод не используется
 		physics::units::pressure::MPa GetPressureDropAtTheAperture();
 
 		// Возвращает диаметер в зависимости от окружающей среды

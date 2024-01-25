@@ -1,4 +1,4 @@
-#include "settings.h"
+﻿#include "settings.h"
 
 namespace settings {
 
@@ -13,22 +13,42 @@ namespace settings {
                 break;
 
             case PARAM_TYPE::HELP:
-                param = PARAM_TYPE::UNITS;
+                param = PARAM_TYPE::ATM;
                 break;
 
-            case PARAM_TYPE::UNITS:
-                param = PARAM_TYPE::HANDLER_MODE;
+            case PARAM_TYPE::ATM:
+                param = PARAM_TYPE::MPA;
                 break;
 
-            case PARAM_TYPE::HANDLER_MODE:
-                param = PARAM_TYPE::REPORT_TYPE;
+            case PARAM_TYPE::MPA:
+                param = PARAM_TYPE::KALVIN;
                 break;
 
-            case PARAM_TYPE::REPORT_TYPE:
-                param = PARAM_TYPE::REPORT_NAME;
+            case PARAM_TYPE::KALVIN:
+                param = PARAM_TYPE::CELSIUM;
                 break;
 
-            case PARAM_TYPE::REPORT_NAME:
+            case PARAM_TYPE::CELSIUM:
+                param = PARAM_TYPE::APP_HANDLER_MODE;
+                break;
+
+            case PARAM_TYPE::APP_HANDLER_MODE:
+                param = PARAM_TYPE::FILE_NAME;
+                break;
+
+            case PARAM_TYPE::FILE_NAME:
+                param = PARAM_TYPE::TEXT;
+                break;
+
+            case PARAM_TYPE::TEXT:
+                param = PARAM_TYPE::IMAGE;
+                break;
+
+            case PARAM_TYPE::IMAGE:
+                param = PARAM_TYPE::CONSOLE;
+                break;
+
+            case PARAM_TYPE::CONSOLE:
                 param = PARAM_TYPE::GAS_TYPE_STR;
                 break;
             
@@ -69,6 +89,10 @@ namespace settings {
                 break;
 
             case PARAM_TYPE::APERTURE_DIAMETER:
+                param = PARAM_TYPE::APERTURE_SCALER;
+                break;
+
+            case PARAM_TYPE::APERTURE_SCALER:
                 param = PARAM_TYPE::NOAP;
                 break;
 
@@ -87,17 +111,32 @@ namespace settings {
             case PARAM_TYPE::HELP:
                 return std::make_pair(ParamType::HELP_SHORT, ParamType::HELP_LARGE);
 
-            case PARAM_TYPE::UNITS:
-                return std::make_pair(ParamType::UNITS_SHORT, ParamType::UNITS_LARGE);
+            case PARAM_TYPE::ATM:
+                return std::make_pair(ParamType::ATM_SHORT, ParamType::ATM_LARGE);
 
-            case PARAM_TYPE::HANDLER_MODE:
+            case PARAM_TYPE::MPA:
+                return std::make_pair(ParamType::MPA_SHORT, ParamType::MPA_LARGE);
+              
+            case PARAM_TYPE::KALVIN:
+                return std::make_pair(ParamType::KALVIN_SHORT, ParamType::KALVIN_LARGE);
+
+            case PARAM_TYPE::CELSIUM:
+                return std::make_pair(ParamType::CELSIUM_SHORT, ParamType::CELSIUM_LARGE);
+
+            case PARAM_TYPE::APP_HANDLER_MODE:
                 return std::make_pair(ParamType::HANDLER_MODE_SHORT, ParamType::HANDLER_MODE_LARGE);
 
-            case PARAM_TYPE::REPORT_TYPE:
-                return std::make_pair(ParamType::REPORT_TYPE_SHORT, ParamType::REPORT_TYPE_LARGE);
+            case PARAM_TYPE::FILE_NAME:
+                return std::make_pair(ParamType::FILE_NAME_SHORT, ParamType::FILE_NAME_LARGE);
 
-            case PARAM_TYPE::REPORT_NAME:
-                return std::make_pair(ParamType::REPORT_NAME_SHORT, ParamType::REPORT_NAME_LARGE);
+            case PARAM_TYPE::TEXT:
+                return std::make_pair(ParamType::TEXT_SHORT, ParamType::TEXT_LARGE);
+
+            case PARAM_TYPE::IMAGE:
+                return std::make_pair(ParamType::IMAGE_SHORT, ParamType::IMAGE_LARGE);
+
+            case PARAM_TYPE::CONSOLE:
+                return std::make_pair(ParamType::CONSOLE_SHORT, ParamType::CONSOLE_LARGE);
             
             case PARAM_TYPE::GAS_TYPE_STR:
                 return std::make_pair(ParamType::GAS_TYPE_SHORT, ParamType::GAS_TYPE_LARGE);
@@ -129,6 +168,9 @@ namespace settings {
             case PARAM_TYPE::APERTURE_DIAMETER:
                 return std::make_pair(ParamType::APERTURE_DIAMETER_SHORT, ParamType::APERTURE_DIAMETER_LARGE);
             
+            case PARAM_TYPE::APERTURE_SCALER:
+                return std::make_pair(ParamType::APERTURE_SCALER_SHORT, ParamType::APERTURE_SCALER_LARGE);
+
             default:
                 return std::make_pair(_NOAP, _NOAP);
             }
@@ -138,18 +180,9 @@ namespace settings {
         void PrintParameterPossibleArgs(PARAM_TYPE param, std::ostream& out) {
             switch (param) {
 
-            case PARAM_TYPE::HANDLER_MODE:
+            case PARAM_TYPE::APP_HANDLER_MODE:
                 PrintParameterPossibleArgs(_POSSIBLE_HANDLER_MODE_ARGS, out);
                 break;
-
-            case PARAM_TYPE::UNITS:
-                PrintParameterPossibleArgs(_POSSIBLE_UNITS_ARGS, out);
-                break;
-
-            case PARAM_TYPE::REPORT_TYPE:
-                PrintParameterPossibleArgs(_POSSIBLE_REPORT_TYPE_ARGS, out);
-                break;
-
             }
         }
 
@@ -186,24 +219,40 @@ namespace settings {
                         out << static_cast<int>(param) << std::setw(_CW_NUMBER - 2) << _CW_SEPARATOR;
                     }
                     
-                    out << expression.first << std::setw(_CW_SHORT_COMMAND) << _CW_SEPARATOR;
+                    if (expression.first == "") {
+                        out << "  " << std::setw(_CW_SHORT_COMMAND) << _CW_SEPARATOR;
+                    }
+                    else {
+                        out << expression.first << std::setw(_CW_SHORT_COMMAND) << _CW_SEPARATOR;
+                    }
+                    
                     out << expression.second << std::setw(
                         _CW_LARGE_COMMAND - static_cast<int>(expression.second.size())) << _CW_SEPARATOR;
                     out << _PARAM_DESCR.at(param) << std::setw(NULL);
                     out << std::endl;
                 }
 
-                PrintParameterPossibleArgs(param, out);
                 ++param;
             }
 
             out << std::endl;
 
             out << "The program can be used in two modes: single (used as default) and package calculation\n";
-            out << " - In the single calculation mode, the program outputs the result in only one single state, ";
+            PrintParameterPossibleArgs(PARAM_TYPE::APP_HANDLER_MODE, out);
+            out << " - In the single calculation mode, the program outputs the result in only one single state,\n   ";
             out << "with the valve fully open, according to the set parameters\n";
-            out << " - In the package mode, the program calculates the gas flow rate according to the specified ";
+            out << " - In the package mode, the program calculates the gas flow rate according to the specified\n   ";
             out << "pressure drop range by opening the valve from 0 to 100%\n\n";
+
+            out << "Some commands may overlap each other, for example, ";
+            out << "suppose the commands are written in the following order:\n";
+            out << "\t . . . " << ParamType::HANDLER_MODE_SHORT << "=single ";
+            out << ParamType::KALVIN_LARGE << " ";
+            out << ParamType::GAS_TYPE_SHORT << "=methane . . . ";
+            out << ParamType::CELSIUM_LARGE << " . . .\n";
+            out << "In this case, the first command \"--kalvin\" sets the temperature in Kelvin.\n";
+            out << "However, next, the \"--celsium\" command appears, which resets the temperature units back to degrees Celsius\n";
+            
 
             out << "\nFor example:\n";
             out << "\t" << ParamType::GAS_CELSIUM_TEMP_LARGE << "=15 ";
@@ -220,9 +269,12 @@ namespace settings {
 
         // Првоеряет количество переданных параметров
         bool ParamCountIsCorrect(int count) {
-            //bool first = count >= _MIN_ARGS;
-            //bool second = count <= settings::detail::_PARAM_COUNT + 1;
             return count >= _MIN_ARGS && count <= settings::detail::_PARAM_COUNT + 1;
+        }
+
+        // Возвращает режим обработчика по полученной строке
+        APP_HANDLER_MODE GetHandlerMode(std::string_view argv) {
+            return _MODE_VARIANTS.count(argv) ? _MODE_VARIANTS.at(argv) : APP_HANDLER_MODE::NOAP;
         }
 
         // Возвращает тип параметра по полученной строке

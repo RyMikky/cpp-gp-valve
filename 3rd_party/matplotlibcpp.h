@@ -1,4 +1,4 @@
-
+﻿
 //
 // Wishlist:
 // * (WIP) Make work for Eigen Vectors and Matrices

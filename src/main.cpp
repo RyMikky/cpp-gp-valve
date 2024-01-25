@@ -1,46 +1,10 @@
-﻿#include "valve.h"
-#include "console.h"
+﻿#include "handler.h"
 
 #include <cassert>
 #include <iostream>
 
-#include "handler.h"
-
-#define PY_SSIZE_T_CLEAN
-#include <Python.h>
-
-#include "../3rd_party/matplotlibcpp.h"
 
 int main(char args, char** argv) {
-
-	namespace plt = matplotlibcpp;
-    // Prepare data.
-    int n = 5000;
-    std::vector<double> x(n), y(n), z(n), w(n, 2);
-    for (int i = 0; i < n; ++i) {
-        x.at(i) = i * i;
-        y.at(i) = sin(2 * 3.14 * i / 360.0);
-        z.at(i) = log(i);
-    }
-
-    // Set the size of output image to 1200x780 pixels
-    plt::figure_size(1200, 780);
-    // Plot line from given x and y data. Color is selected automatically.
-    plt::plot(x, y);
-    // Plot a red dashed line from given x and y data.
-    plt::plot(x, w, "r--");
-    // Plot a line whose name will show up as "log(x)" in the legend.
-    plt::plot(x, z, { {"label", "log(x)"} });
-    // Set x-axis to interval [0,1000000]
-    plt::xlim(0, 1000 * 1000);
-    // Add graph title
-    plt::title("Sample figure");
-    // Enable legend.
-    plt::legend();
-    // Save the image (file format is determined by the extension)
-    plt::save("./basic.png");
-
-    std::cout << "plot complete" << std::endl;
 
 	/*
 		Модель клапана. Среда: метан (100 %), параметры: 12-14МПа, 10-15 град С;
@@ -56,18 +20,35 @@ int main(char args, char** argv) {
 		3) Потерями на трение и сопрротивление кромки диафрагмы пренебрегаем
 	*/
 
-	// -t=15 -g=methane -s=15m -p=100 -a=75 -i=12 -o=11.95
+	/*
+		Для работы приложения необходимы: 
+		1) Система интерпретации языка Python 3.9+
+		2) Библиотеки numpy и matplotlib (pip3 install numpy, etc)
+		3) Корректно прописанные пути для линковки хеддеров, библиотек и python
+
+			Например:
+			\dev\python\include
+			\dev\python\Lib\site-packages\numpy\core\include
+			\dev\python\libs
+
+		Обёртка matplotlib-cpp работает только в конфигурации Release.
+		Debug компилируется, но во время отладки PyImport_Import(PyObject*)
+		возвращает nullptr, что приводит к возникновению исключения
+	*/
+
+	/*
+		Варианты запуска для примера
+		-t=15 -g=methane -s=15m -p=100 -a=75 -i=12 -o=11.95
+		--text -n=report_file -t=15 -g=methane -s=15m -p=100 -a=75 -i=12 -o=11.95
+		--image --text -n=report_file -t=15 -g=methane -s=15m -p=100 -a=75 -i=12 -o=11.95
+
+		-t=0 -g=methane -s=15m -p=100 -a=75 -i=150 -d=0.0 -l=2.5 -e=0.5 --atm
+		-t=0 -g=methane -s=15m --text -n=report_file -p=100 -a=75 -i=150 -d=0.0 -l=2.5 -e=0.5 --atm
+		-t=0 -l=2.5 -s=15m --text -n=report_file -p=100 -a=75 --image -i=150 -d=0.0 -e=0.5 --atm -g=methane
+	*/
 
 	setlocale(LC_ALL, "Russian");
 	setlocale(LC_NUMERIC, "English");
 
-	handler::Handler handler(args, argv);
-
-    std::cout << "handler complete" << std::endl;
-
-	/*settings::Settings settings = console::ParseCommandLine(args, argv);
-	fittings::Valve valve(settings);
-
-	std::cout << "Gaz mass consumption is " << valve.GetMassConsumption() << " kg/sec" << std::endl;
-	std::cout << "Gaz volume consumption is " << valve.GetVolumeConsumption() << " m3/sec" << std::endl;*/
+	handler::Handler(args, argv).Run();
 }

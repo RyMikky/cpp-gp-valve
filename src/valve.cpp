@@ -1,4 +1,5 @@
 ﻿#include "valve.h"
+
 #include <cmath>
 #include <iostream>
 #include <cassert>
@@ -13,24 +14,12 @@ namespace fittings {
 
 	// -------------------------- реализация методов клапана ------------------------------------
 
-	Valve::Valve(settings::Settings& settings) 
+	Valve::Valve(settings::ValveSettings& settings) 
 		: _settings(settings)
 	{}
 
-	Valve& Valve::SetValveScale(double scale) {
-		if (scale < 0.0 && scale > 1.0) 
-			throw std::out_of_range("Value opened procet is incorrect");
-
-		_scale = scale;
-		return *this;
-	}
-
-	double Valve::GetValveScale() const {
-		return _scale;
-	}
-
 	bool Valve::IsClosed() const {
-		return _scale <= 0.0;
+		return _settings._aperture_scaler <= 0.0 || _settings._aperture_scaler > 1.0;
 	}
 
 	double Valve::GetMassConsumption() {
@@ -49,11 +38,12 @@ namespace fittings {
 				∆P - падение давления на переходе
 		*/
 
-		double PiD = math::constants::_PI * std::pow(_settings._aperture_diameter._value._value, 2.0) / 4.0;
-		double RoP = std::pow(GetPressureDropAtTheAperture()._value * 2 * 
-			physics::StreamDensity(_settings._gas_input_pressure, _settings._gas_type_str, _settings._gas_celsium_temp)._value, 0.5);
+		assert(_settings._aperture_scaler >= 0.0 && _settings._aperture_scaler <= 1.0);
+		double PiD = math::constants::_PI * std::pow(_settings._aperture_diameter(), 2.0) / 4.0;
+		double RoP = std::pow(_settings._gas_press_drop() * 2 *
+			physics::StreamDensity(_settings._gas_input_pressure, _settings._gas_type_str, _settings._gas_celsium_temp)(), 0.5);
 
-		return GetEntryCoefficient() * GetFlowCoefficient() * GetExpansionCoefficient() * PiD * RoP;
+		return GetEntryCoefficient() * GetFlowCoefficient() * GetExpansionCoefficient() * PiD * RoP * _settings._aperture_scaler;
 	}
 
 	double Valve::GetVolumeConsumption() {
@@ -65,11 +55,21 @@ namespace fittings {
 				ρ - плотность газа для указанной температуры
 		*/
 
-		return GetMassConsumption() / physics::StreamDensity(_settings._gas_input_pressure, _settings._gas_type_str, _settings._gas_celsium_temp)._value;
+		return GetMassConsumption() / physics::StreamDensity(_settings._gas_input_pressure, _settings._gas_type_str, _settings._gas_celsium_temp)();
+	}
+
+	ValveResult Valve::GetCalculationResult() {
+		double mass_consum = GetMassConsumption();
+		return { mass_consum,  GetVolumeConsumption(mass_consum) };
+	}
+
+
+	double Valve::GetVolumeConsumption(double mass_consum) {
+		return mass_consum / physics::StreamDensity(_settings._gas_input_pressure, _settings._gas_type_str, _settings._gas_celsium_temp)();
 	}
 
 	pressure::MPa Valve::GetPressureDropAtTheAperture() {
-		return { _settings._gas_input_pressure._value - _settings._gas_output_pressure._value };
+		return { _settings._gas_input_pressure() - _settings._gas_output_pressure()};
 	}
 
 	Diameter Valve::GetRealTimeDiameter(Diameter diam) {
@@ -84,11 +84,11 @@ namespace fittings {
 
 		matherials::SteelCoef coef = matherials::GetSteelCoef(_settings._pipe_steel_mark);
 
-		double be_group = (double)10e-3 * _settings._gas_celsium_temp._value * coef._be;
-		double ce_group = (double)10e-6 * std::pow(_settings._gas_celsium_temp._value, 2) * coef._ce;
+		double be_group = (double)10e-3 * _settings._gas_celsium_temp() * coef._be;
+		double ce_group = (double)10e-6 * std::pow(_settings._gas_celsium_temp(), 2) * coef._ce;
 		double y = (double)10e-6 * (coef._ae + be_group - ce_group);
 
-		return Diameter({ diam._value._value * (1.0 + (y * (_settings._gas_celsium_temp._value - 20.0)))});
+		return Diameter( diam() * (1.0 + (y * (_settings._gas_celsium_temp() - 20.0))));
 	}
 
 	Diameter Valve::GetPipeRealInnerDiameter() {
@@ -100,7 +100,7 @@ namespace fittings {
 	}
 
 	double Valve::GetDiametersRatio() const {
-		return _settings._aperture_diameter._value._value / _settings._pipe_inner_diameter._value._value;
+		return _settings._aperture_diameter() / _settings._pipe_inner_diameter();
 	}
 
 	double Valve::GetEntryCoefficient() {
@@ -126,7 +126,7 @@ namespace fittings {
 		*/
 
 		double beta = GetDiametersRatio();
-		double L1 = 25.4 / _settings._pipe_inner_diameter._value._value;
+		double L1 = 25.4 / _settings._pipe_inner_diameter();
 
 		/*
 			формулу разделим на 6 элементов, fc0 = 0.5959f;
@@ -152,8 +152,8 @@ namespace fittings {
 				k – коэффициент адиабаты измеряемой газовой среды
 		*/
 
-		double numerator = (0,41 + (0,35 * std::pow(GetDiametersRatio(), 4))) * GetPressureDropAtTheAperture()._value;
-		double denominator = _settings._gas_input_pressure._value
+		double numerator = (0,41 + (0,35 * std::pow(GetDiametersRatio(), 4))) * _settings._gas_press_drop();
+		double denominator = _settings._gas_input_pressure()
 			* physics::constants::GetGasAdiabaticIndex(_settings._gas_type_str, _settings._gas_celsium_temp);
 		return 1.0 - (numerator / denominator);
 	}

@@ -4,8 +4,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 
-add_definitions(-DMATPLOTLIBCPP_PYTHON_HEADER=Python.h)
-
 add_executable(gp_valve_diagram
 		
 	src/matherials.h
@@ -28,14 +26,6 @@ add_executable(gp_valve_diagram
 
 	3rd_party/matplotlibcpp.h
 )
-
-find_package(Eigen3)
-
-if (${EIGEN3_FOUND})
-  include_directories(${EIGEN3_INCLUDE_DIR})
-else()
-  message(STATUS "Eigen3 not found")
-endif()
 
 find_package(Python3 COMPONENTS Interpreter Development NumPy)
 if (${Python3_FOUND})
@@ -63,7 +53,3 @@ else()
   " Some functions might not work.")
   add_definitions(-DWITHOUT_NUMPY)
 endif()
-
-include_directories(${PYTHONHOME}/include)
-include_directories(${PYTHONHOME}/Lib/site-packages/numpy/core/include)
-link_directories(${PYTHONHOME}/libs)

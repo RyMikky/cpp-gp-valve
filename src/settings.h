@@ -1,10 +1,11 @@
-#pragma once
+﻿#pragma once
 
 #include "matherials.h"
 #include "physics.h"
 #include "math.h"
 
 #include <set>
+#include <vector>
 #include <string>
 #include <utility>
 #include <numeric>
@@ -19,17 +20,43 @@ using namespace std::string_view_literals;
 // Сожержит структуру настроек клапана и все необходимые методы для её получения
 namespace settings {
 
-    enum class HANDLER_MODE {
-        SINGLE, PACKAGE
+    // Режим исполнения обработчика
+    enum class APP_HANDLER_MODE {
+        NOAP, SINGLE, PACKAGE
     };
+
+    // Единица измерения температуры на входе в консоль
+    enum class APP_TEMP_UNIT {
+        NOAP, KALVIN, CELSIUM
+    };
+
+    // Единица измерения давлеия на входе в консоль
+    enum class APP_PRESS_UNIT {
+        NOAP, MPA, ATM
+    };
+
+#define APP_MODE APP_HANDLER_MODE _app_handler_mode                                      // Режим выполнения программы
+#define APP_PRESS APP_PRESS_UNIT _app_press_unit                                         // Eдиницы измерения давления
+#define APP_TEMP APP_TEMP_UNIT _app_temp_unit                                            // Eдиницы измерения температуры
+
+#define REPORT_TO_CONSOLE bool _app_report_console                                       // Флаг вывода информации в консоль
+#define REPORT_TO_TEXT bool _app_report_txt_file                                         // Флаг вывода информации в текстовый файл
+#define REPORT_TO_IMAGE bool _app_report_png_file                                        // Флаг вывода информации в файл изображения
+#define REPORT_FILE_NAME std::string _app_report_file_name                               // Имя файла сохранения информации 
 
 #define GAS_TYPE_STRING std::string _gas_type_str                                        // Тип газа в системе в виде строки
 #define GAS_CEL_TEMP physics::units::temperature::Cels _gas_celsium_temp                 // Температура газа в системе в град. Цельсия
 #define GAS_IN_PRESS physics::units::pressure::MPa _gas_input_pressure                   // Давление газа перед диафрагмой, в МПа
 #define GAS_OUT_PRESS physics::units::pressure::MPa _gas_output_pressure                 // Давление газа после диафрагмы, в МПа
+
+#define GAS_PRESS_DROP physics::units::pressure::MPa _gas_press_drop                     // Падение давления на перепаде, в МПа
+#define GAS_DROP_LIMM physics::units::pressure::MPa _gas_drop_limmit                     // Предельное значения перепада давленния, в МПа
+#define GAS_DROP_STP physics::units::pressure::MPa _gas_drop_step                        // Шаг изменения перепада давления, в МПа
+
 #define PIPE_IN_DIAM math::units::Diameter _pipe_inner_diameter                          // Внутренний диаметр трубы, в мм
 #define PIPE_STL_MARK std::string _pipe_steel_mark                                       // Марка стали тубы
 #define APERTURE_DIAM math::units::Diameter _aperture_diameter                           // Диаметр диафрагмы, в мм
+#define APERTURE_SCAL double _aperture_scaler                                            // Процент открытия клапана от 0 до 1
 
     namespace detail {
 
@@ -39,8 +66,18 @@ namespace settings {
         static const int _MIN_ARGS = 2;
 
         enum class PARAM_TYPE {
-            NOAP, HELP, UNITS, HANDLER_MODE, REPORT_TYPE, REPORT_NAME, GAS_TYPE_STR, GAS_CELSIUM_TEMP, GAS_INPUT_PRESSURE,  
-            GAS_OUTPUT_PRESSURE, GAS_PRESSURE_DROP, GAS_DROP_LIMMIT, GAS_DROP_STEP, PIPE_INNER_DIAMETER, PIPE_STEEL_MARK, APERTURE_DIAMETER
+            NOAP, HELP, 
+
+            ATM, MPA, KALVIN, CELSIUM,
+                    
+            APP_HANDLER_MODE, FILE_NAME, 
+            TEXT, IMAGE, CONSOLE,
+       
+            GAS_TYPE_STR, GAS_CELSIUM_TEMP, GAS_INPUT_PRESSURE, GAS_OUTPUT_PRESSURE, 
+            
+            GAS_PRESSURE_DROP, GAS_DROP_LIMMIT, GAS_DROP_STEP, 
+
+            PIPE_INNER_DIAMETER, PIPE_STEEL_MARK, APERTURE_DIAMETER, APERTURE_SCALER
             // NOAP - Not a Parameter
         };
 
@@ -56,25 +93,38 @@ namespace settings {
         static const std::unordered_map<PARAM_TYPE, std::string_view> _PARAM_DESCR = {
 
             { PARAM_TYPE::HELP, "Show console commands descriptions" },
-            { PARAM_TYPE::UNITS, "Set dimension units (possible: atm, mpa, kalv, cels)" },
 
-            { PARAM_TYPE::HANDLER_MODE, "Set programm hadler mode (single_calculation, package_calculation)"},
-            { PARAM_TYPE::REPORT_TYPE, "Set handler report type (may be console output, *.txt or *.png file)"},
-            { PARAM_TYPE::REPORT_NAME, "Set handler report file name (only for txt or png output)"},
+            // -------------------------- dimension units ---------------------------------------
+
+            { PARAM_TYPE::ATM, "Set pressure dimension unit as Atm" },
+            { PARAM_TYPE::MPA, "Set pressure dimension unit as MPa (used by default)" },
+            { PARAM_TYPE::KALVIN, "Set temperature dimension unit as Kalvin" },
+            { PARAM_TYPE::CELSIUM, "Set temperature dimension unit as Celsium (used by default)" },
+
+            // -------------------------- handler configuration ---------------------------------
+
+            { PARAM_TYPE::APP_HANDLER_MODE, "Set programm hadler mode (optional parameter)"},
+            { PARAM_TYPE::FILE_NAME, "Set handler report file name (used for txt/png output)"},
+            { PARAM_TYPE::TEXT, "Process handler report in to *.txt file"},
+            { PARAM_TYPE::IMAGE, "Process handler report in to *.png file"},
+            { PARAM_TYPE::CONSOLE, "Process handler report in to system console (used by default)"},
+
+            // -------------------------- valve configuration -----------------------------------
 
             { PARAM_TYPE::GAS_TYPE_STR, "Set gas type (print string)" },
             { PARAM_TYPE::GAS_CELSIUM_TEMP, "Set gas temperature, in Celsium" },
 
             { PARAM_TYPE::GAS_INPUT_PRESSURE, "Set gas input to pipe pressure, in MPa" },
-            { PARAM_TYPE::GAS_OUTPUT_PRESSURE, "Set gas output aperture pipe pressure, in MPa (must be set this, or pressure drop)" },
+            { PARAM_TYPE::GAS_OUTPUT_PRESSURE, "Set gas output aperture pipe pressure, in MPa" },
 
-            { PARAM_TYPE::GAS_PRESSURE_DROP, "Set gas pressure drop on aperture, in MPa (must be set on pakage_calculation as from-value)" },
-            { PARAM_TYPE::GAS_DROP_LIMMIT, "Set gas pressure drop max_value, in MPa (must be set on pakage_calculation as to-value)"},
-            { PARAM_TYPE::GAS_DROP_STEP, "Set gas pressure drop step, in MPa (must be set on pakage_calculation)"},
+            { PARAM_TYPE::GAS_PRESSURE_DROP, "Set gas pressure drop on aperture, in MPa (used in package-mode as from-value)" },
+            { PARAM_TYPE::GAS_DROP_LIMMIT, "Set gas pressure drop max_value, in MPa (used in package-mode as to-value)"},
+            { PARAM_TYPE::GAS_DROP_STEP, "Set gas pressure drop step, in MPa (must be set on package-mode)"},
 
             { PARAM_TYPE::PIPE_INNER_DIAMETER, "Set pipe inner diameter, in mm" },
             { PARAM_TYPE::PIPE_STEEL_MARK, "Set pipe steel mark (print string)" },
             { PARAM_TYPE::APERTURE_DIAMETER, "Set aperture diameter, in mm" },
+            { PARAM_TYPE::APERTURE_SCALER, "Set aperture opened scale, in range 0.0 - 1.0" },
 
         };
 
@@ -82,11 +132,20 @@ namespace settings {
         static const std::unordered_map<std::string_view, PARAM_TYPE> _COMMAND_VARIANTS = {
 
             { "--help"sv, PARAM_TYPE::HELP }, { "-h"sv, PARAM_TYPE::HELP }, 
-            { "--units"sv, PARAM_TYPE::UNITS }, { "-u"sv, PARAM_TYPE::UNITS },
 
-            { "--mode"sv, PARAM_TYPE::HANDLER_MODE }, { "-m"sv, PARAM_TYPE::HANDLER_MODE },
-            { "--report-type"sv, PARAM_TYPE::REPORT_TYPE }, { "-r"sv, PARAM_TYPE::REPORT_TYPE },
-            { "--report-name"sv, PARAM_TYPE::REPORT_NAME }, { "-n"sv, PARAM_TYPE::REPORT_NAME },
+            // -------------------------- dimension units ---------------------------------------
+
+            { "--atm", PARAM_TYPE::ATM  }, { "--mpa", PARAM_TYPE::MPA  },
+            { "--kalvin", PARAM_TYPE::KALVIN  }, { "--celsium", PARAM_TYPE::CELSIUM  },
+            
+
+            // -------------------------- handler configuration ---------------------------------
+
+            { "--handler-mode"sv, PARAM_TYPE::APP_HANDLER_MODE }, { "-m"sv, PARAM_TYPE::APP_HANDLER_MODE },
+            { "--out-file-name"sv, PARAM_TYPE::FILE_NAME }, { "-n"sv, PARAM_TYPE::FILE_NAME },
+            { "--text"sv, PARAM_TYPE::TEXT }, { "--image"sv, PARAM_TYPE::IMAGE }, { "--console"sv, PARAM_TYPE::CONSOLE },
+
+            // -------------------------- valve configuration -----------------------------------
 
             { "--gas-type-str"sv, PARAM_TYPE::GAS_TYPE_STR }, { "-g"sv, PARAM_TYPE::GAS_TYPE_STR },
             { "--gas-cel-temp"sv, PARAM_TYPE::GAS_CELSIUM_TEMP }, { "-t"sv, PARAM_TYPE::GAS_CELSIUM_TEMP },
@@ -100,8 +159,20 @@ namespace settings {
 
             { "--pipe-in-diam"sv, PARAM_TYPE::PIPE_INNER_DIAMETER }, { "-p"sv, PARAM_TYPE::PIPE_INNER_DIAMETER },
             { "--pipe-stl-mark"sv, PARAM_TYPE::PIPE_STEEL_MARK }, { "-s"sv, PARAM_TYPE::PIPE_STEEL_MARK },
-            { "--aper-diam"sv, PARAM_TYPE::APERTURE_DIAMETER }, { "-a"sv, PARAM_TYPE::APERTURE_DIAMETER }
+            { "--aper-diam"sv, PARAM_TYPE::APERTURE_DIAMETER }, { "-a"sv, PARAM_TYPE::APERTURE_DIAMETER },
+            { "--aper-scale"sv, PARAM_TYPE::APERTURE_SCALER }, { "-c"sv, PARAM_TYPE::APERTURE_SCALER }
 
+        };
+
+        static const std::set<std::string_view> _POSSIBLE_HANDLER_MODE_ARGS =
+        {
+            "single"sv, "package"sv, "single_mode"sv, "package_mode"sv
+        };
+
+        static const std::unordered_map<std::string_view, APP_HANDLER_MODE> _MODE_VARIANTS =
+        {
+            { "single"sv, APP_HANDLER_MODE::SINGLE }, { "single_mode"sv, APP_HANDLER_MODE::SINGLE },
+            { "package"sv, APP_HANDLER_MODE::PACKAGE }, { "package_mode"sv, APP_HANDLER_MODE::PACKAGE },
         };
 
         // Возвращает сроковое предаставление параметра
@@ -109,15 +180,32 @@ namespace settings {
             ParamType() = default;
             constexpr static std::string_view HELP_SHORT = "-h";
             constexpr static std::string_view HELP_LARGE = "--help";
-            constexpr static std::string_view UNITS_SHORT = "-u";
-            constexpr static std::string_view UNITS_LARGE = "--units";
+
+            // -------------------------- dimension units ---------------------------------------
+
+            constexpr static std::string_view ATM_SHORT = "";
+            constexpr static std::string_view ATM_LARGE = "--atm";
+            constexpr static std::string_view MPA_SHORT = "";
+            constexpr static std::string_view MPA_LARGE = "--mpa";
+            constexpr static std::string_view KALVIN_SHORT = "";
+            constexpr static std::string_view KALVIN_LARGE = "--kalvin";
+            constexpr static std::string_view CELSIUM_SHORT = "";
+            constexpr static std::string_view CELSIUM_LARGE = "--celsium";
+
+            // -------------------------- handler configuration ---------------------------------
 
             constexpr static std::string_view HANDLER_MODE_SHORT = "-m";
-            constexpr static std::string_view HANDLER_MODE_LARGE = "--mode";
-            constexpr static std::string_view REPORT_TYPE_SHORT = "-r";
-            constexpr static std::string_view REPORT_TYPE_LARGE = "--report-type";
-            constexpr static std::string_view REPORT_NAME_SHORT = "-n";
-            constexpr static std::string_view REPORT_NAME_LARGE = "--report-name";
+            constexpr static std::string_view HANDLER_MODE_LARGE = "--handler-mode";
+            constexpr static std::string_view FILE_NAME_SHORT = "-n";
+            constexpr static std::string_view FILE_NAME_LARGE = "--out-file-name";
+            constexpr static std::string_view TEXT_SHORT = "";
+            constexpr static std::string_view TEXT_LARGE = "--text";
+            constexpr static std::string_view IMAGE_SHORT = "";
+            constexpr static std::string_view IMAGE_LARGE = "--image";
+            constexpr static std::string_view CONSOLE_SHORT = "";
+            constexpr static std::string_view CONSOLE_LARGE = "--console";
+
+            // -------------------------- valve configuration -----------------------------------
 
             constexpr static std::string_view GAS_TYPE_SHORT = "-g";
             constexpr static std::string_view GAS_TYPE_LARGE = "--gas-type-str";
@@ -142,28 +230,14 @@ namespace settings {
             constexpr static std::string_view PIPE_STEEL_MARK_LARGE = "--pipe-stl-mark";
             constexpr static std::string_view APERTURE_DIAMETER_SHORT = "-a";
             constexpr static std::string_view APERTURE_DIAMETER_LARGE = "--aper-diam";
-        };
-
-        static const std::set<std::string_view> _POSSIBLE_HANDLER_MODE_ARGS = 
-        { 
-            "single"sv, "package"sv, "single_mode"sv, "package_mode"sv, "single_calculation"sv, "package_calculation"sv
-        };
-
-        static const std::set<std::string_view> _POSSIBLE_UNITS_ARGS =
-        {
-            "kalv"sv, "kalv_mpa"sv, "kalv_atm"sv, "cels"sv, "cels_mpa"sv, "cels_atm"sv,
-            "atm"sv, "atm_kalv"sv, "atm_cels"sv, "mpa"sv, "mpa_kalv"sv, "mpa_cels"sv
-        };
-
-        static const std::set<std::string_view> _POSSIBLE_REPORT_TYPE_ARGS =
-        {
-            "image"sv, "text"sv, "console"sv, "console_text"sv, "console_image"sv, "image_text"sv, "image_console"sv, "all"sv
+            constexpr static std::string_view APERTURE_SCALER_SHORT = "-c";
+            constexpr static std::string_view APERTURE_SCALER_LARGE = "--aper-scale";
         };
 
         // Печатает возможные значения аргументов для параметра
         template <typename Collection>
         void PrintParameterPossibleArgs(Collection collection, std::ostream& out) {
-            out << "   possible values: ";
+            out << "   Possible command arguments: ";
             for (const auto& item : collection) {
                 out << "\"" << item << "\" ";
             }
@@ -199,29 +273,59 @@ namespace settings {
         // Првоеряет количество переданных параметров
         bool ParamCountIsCorrect(int);
 
+        // Возвращает режим обработчика по полученной строке
+        APP_HANDLER_MODE GetHandlerMode(std::string_view);
+
         // Возвращает тип параметра по полученной строке
         PARAM_TYPE GetParamType(std::string_view);
 
     } // namespace detail
 
-    // Блок настрроек для работы клапана
-    struct Settings {
+    // Блок настроек обработчика
+    struct HandlerSettings {
+
+        APP_MODE = APP_HANDLER_MODE::SINGLE;
+        APP_PRESS = APP_PRESS_UNIT::MPA;
+        APP_TEMP = APP_TEMP_UNIT::CELSIUM;
+
+        REPORT_TO_CONSOLE = true;
+        REPORT_TO_TEXT = false;
+        REPORT_TO_IMAGE = false;
+        REPORT_FILE_NAME = {};
+
+        HandlerSettings() = default;
+        HandlerSettings(const HandlerSettings&) = delete;
+        HandlerSettings& operator=(const HandlerSettings&) = delete;
+
+        HandlerSettings(HandlerSettings&&) = default;
+        HandlerSettings& operator=(HandlerSettings&&) = default;
+        ~HandlerSettings() = default;
+    };
+
+    // Блок настрроек клапана
+    struct ValveSettings {
 
         GAS_TYPE_STRING = {};
         GAS_CEL_TEMP = {};
         GAS_IN_PRESS = {};
         GAS_OUT_PRESS = {};
+
+        GAS_PRESS_DROP = {};
+        GAS_DROP_LIMM = {};
+        GAS_DROP_STP = {};
+
         PIPE_IN_DIAM = {};
         PIPE_STL_MARK = {};
         APERTURE_DIAM = {};
+        APERTURE_SCAL = 1.0;     // По умолчанию установлен в едницу - открыт полностью
 
-        Settings() = default;
-        Settings(const Settings&) = delete;
-        Settings& operator=(const Settings&) = delete;
+        ValveSettings() = default;
+        ValveSettings(const ValveSettings&) = delete;
+        ValveSettings& operator=(const ValveSettings&) = delete;
 
-        Settings(Settings&&) = default;
-        Settings& operator=(Settings&&) = default;
-        ~Settings() = default;
+        ValveSettings(ValveSettings&&) = default;
+        ValveSettings& operator=(ValveSettings&&) = default;
+        ~ValveSettings() = default;
     };
 
 } // namespace settings
