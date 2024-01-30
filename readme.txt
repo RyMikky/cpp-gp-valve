@@ -15,9 +15,14 @@
 /*
 	Для работы приложения необходимы: 
 	1) Система интерпретации языка Python 3.9+
-	2) Библиотеки numpy и matplotlib (pip3 install numpy, etc)
+	2) Библиотеки numpy и matplotlib 
+	   - установка для Windows 
+			- pip3 install numpy
+			- pip3 install matplotlib
+	   - установка для Linux (Ubuntu | .pyenv)
+	   		- sudo apt-get python3-numpy
+			- sudo apt-get python3-matplotlib
 	3) Корректно прописанные пути для линковки хеддеров, библиотек и python
-
 		Например:
 		\dev\python\include
 		\dev\python\Lib\site-packages\numpy\core\include

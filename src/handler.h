@@ -3,6 +3,8 @@
 #include "valve.h"
 #include "console.h"
 
+#include <fstream>
+
 namespace handler {
 
 	// Класс-обработчик выполнения тестирования и сбора данных по расходу газа проходящего через клапан

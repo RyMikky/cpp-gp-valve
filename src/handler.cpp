@@ -4,7 +4,6 @@
 #include "../3rd_party/matplotlibcpp.h"
 #define PY_SSIZE_T_CLEAN
 
-#include <fstream>
 #include <stdexcept>
 #include <exception>
 
